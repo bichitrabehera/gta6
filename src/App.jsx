@@ -1,12 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-// import "remixicon/fonts/remixicon.css";
 
 const App = () => {
-  let [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // GSAP entrance animation
   useGSAP(() => {
+    if (isMobile) return;
+
     const tl = gsap.timeline();
 
     tl.to(".vi-mask-group", {
@@ -23,16 +34,16 @@ const App = () => {
       opacity: 0,
       onUpdate: function () {
         if (this.progress() >= 0.7) {
-          document.querySelector(".svg").remove();
+          document.querySelector(".svg")?.remove();
           setShowContent(true);
           this.kill();
         }
       },
     });
-  });
+  }, [isMobile]);
 
   useGSAP(() => {
-    if (!showContent) return;
+    if (!showContent || isMobile) return;
 
     gsap.to(".main", {
       scale: 1,
@@ -77,23 +88,27 @@ const App = () => {
     });
 
     const main = document.querySelector(".main");
-
-    main?.addEventListener("mousemove", function (e) {
+    main?.addEventListener("mousemove", (e) => {
       const xMove = (e.clientX / window.innerWidth - 0.5) * 40;
-      gsap.to(".main .text", {
-        x: `${xMove * 0.4}%`,
-      });
-      gsap.to(".sky", {
-        x: xMove,
-      });
-      gsap.to(".bg", {
-        x: xMove * 1.7,
-      });
+      gsap.to(".text", { x: `${xMove}%` });
+      gsap.to(".sky", { x: xMove });
+      gsap.to(".bg", { x: xMove * 1.7 });
     });
-  }, [showContent]);
+  }, [showContent, isMobile]);
+
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-center w-full h-screen bg-black text-white text-center px-6">
+        <h1 className="text-5xl sm:text-2xl">
+          Please switch to a larger device to view this experience.
+        </h1>
+      </div>
+    );
+  }
 
   return (
     <>
+      {/* Intro SVG Animation */}
       <div className="svg flex items-center justify-center fixed top-0 left-0 z-[100] w-full h-screen overflow-hidden bg-[#000]">
         <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
           <defs>
@@ -124,6 +139,7 @@ const App = () => {
         </svg>
       </div>
 
+      {/* Main Content */}
       {showContent && (
         <div className="main w-full bg-black overflow-hidden">
           <div className="landing w-full h-screen bg-black">
@@ -141,7 +157,7 @@ const App = () => {
               </div>
             </div>
 
-            {/* Main Content */}
+            {/* Background Images */}
             <div className="imagesdiv relative overflow-hidden w-full h-screen">
               <img
                 className="absolute sky top-0 left-0 w-full h-full object-cover"
@@ -154,22 +170,22 @@ const App = () => {
                 alt=""
               />
 
-              {/* Text */}
+              {/* Text Title */}
               <div className="text text-white flex flex-col gap-3 absolute top-2 left-1/2 -translate-x-1/2 scale-[1.4] rotate-[-10deg]">
                 <h1 className="text-[6rem] leading-none -ml-20">grand</h1>
                 <h1 className="text-[6rem] leading-none -ml-10">theft</h1>
                 <h1 className="text-[6rem] leading-none -ml-20">auto</h1>
               </div>
 
-              {/* Character */}
+              {/* Character Image */}
               <img
-                className="absolute character scale-[0.5] sm:scale-[0.8] -bottom-[40%] sm:-bottom-[60%] left-1/2 -translate-x-1/2 w-[70%] sm:w-auto"
+                className="absolute character scale-[0.7] sm:scale-[0.8] -bottom-[40%] sm:-bottom-[60%] left-1/2 -translate-x-1/2 w-[70%] sm:w-auto"
                 src="./girlbg.png"
                 alt=""
               />
             </div>
 
-            {/* Bottom Bar */}
+            {/* Bottom Platform Bar */}
             <div className="bottombar w-full py-5 sm:py-10 px-5 sm:px-10 absolute bottom-0 left-0 bg-gradient-to-t from-black to-transparent">
               <img
                 className="h-[40px] sm:h-[60px] absolute top-1/3 left-1/2 -translate-x-1/2"
